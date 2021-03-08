@@ -21,7 +21,10 @@ def convert( converter ):
             exporter(PageBlockExporter()): export page block
     """
     converter.page2md()
-    return converter.getMd()
+    return {
+        "body": converter.getMd(),
+        "table_of_contents": converter.getToc(),
+    }
 
 
 if __name__ == "__main__":

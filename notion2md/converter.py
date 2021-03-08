@@ -14,6 +14,7 @@ class PageBlockConverter:
             self.md = self._page_header()
         else:
             self.md = ""
+        self.toc = "\n\n"
 
     def _page_header(self):
         """return the page's header formatted as Front Matter
@@ -67,6 +68,9 @@ class PageBlockConverter:
     def getMd(self):
         return self.md
 
+    def getToc(self):
+        return self.toc
+
     def page2md(self, page=None):
         """change notion's block to markdown string
         """
@@ -84,7 +88,7 @@ class PageBlockConverter:
         if params['tap_count'] != 0:
             self.md += '\n'
             for i in range(params['tap_count']):
-                self.md += '\t'
+                self.md += f'{"" : >4}'
         try:
             btype = block.type
         except:
@@ -96,11 +100,16 @@ class PageBlockConverter:
         except:
             pass
         if btype == 'header':
-            self.md += "# " + filter_inline_math(block)
+            self.md += "# " + block.title
+            self.toc += "- " + block.title.replace('**', '').replace('__', '') + "\n"
         if btype == "sub_header":
-            self.md += "## " + filter_inline_math(block)
+            self.md += "## " + block.title
+            self.toc += f'{"" : >4}'
+            self.toc += '- ' + block.title.replace('**', '').replace('__', '') + "\n"
         if btype == "sub_sub_header":
-            self.md += "### " + filter_inline_math(block)
+            self.md += "### " + block.title
+            self.toc += f'{"" : >8}'
+            self.toc += '- ' + block.title.replace('**', '').replace('__', '') + "\n"
         if btype == 'page':
             # if type is page, we will get the page link and set as link
             self.md += link_format(block.name, block.get_browseable_url())
@@ -135,7 +144,9 @@ class PageBlockConverter:
             self.md += ""
         if btype == "collection_view":
             collection = block.collection
-            self.md += self.make_table(collection)
+            self.md += self.make_table(collection) + "\n"
+            self.md += '<div class="table_title">{}</div>'.format(block.title.replace('__', '').replace('**', ''))
+            self.md += "\n\n"
         if block.children and btype != 'page':
             params['tap_count'] += 1
             for child in block.children:

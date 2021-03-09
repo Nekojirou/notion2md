@@ -85,6 +85,7 @@ class PageBlockConverter:
         self.md = self.md[:-1]
 
     def block2md(self, block, params):
+        # is_comment = False
         if params['tap_count'] != 0:
             self.md += '\n'
             for i in range(params['tap_count']):
@@ -115,7 +116,10 @@ class PageBlockConverter:
             self.md += link_format(block.name, block.get_browseable_url())
         if btype == 'text':
             try:
-                self.md += filter_inline_math(block)
+                text = filter_inline_math(block)
+                if(text.lstrip().startswith('//')):
+                    return
+                self.md += text
             except:
                 self.md += ""
         if btype == 'bookmark':
@@ -147,11 +151,15 @@ class PageBlockConverter:
             self.md += self.make_table(collection) + "\n"
             self.md += '<div class="table_title">{}</div>'.format(block.title.replace('__', '').replace('**', ''))
             self.md += "\n\n"
+        if btype == "image":
+            alt = block.caption if hasattr(block, 'caption') and block.caption else block.source
+            self.md += image_format(alt, block.source)
         if block.children and btype != 'page':
             params['tap_count'] += 1
             for child in block.children:
                 self.block2md(child, params)
             params['tap_count'] -= 1
+        # if params['tap_count'] == 0 and not(is_comment):
         if params['tap_count'] == 0:
             self.md += "\n\n"
 
@@ -189,6 +197,12 @@ def link_format(name, url):
     """make markdown link format string
     """
     return "[" + name + "]" + "(" + url + ")"
+
+
+def image_format(alt, url):
+    """make markdown link format string
+    """
+    return "![" + alt + "]" + "(" + url + ")"
 
 
 def table_to_markdown(table):
